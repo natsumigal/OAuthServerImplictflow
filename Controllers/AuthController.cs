@@ -1,6 +1,10 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
+using OAuthServer.Implementations;
+using OAuthServer.Interfaces;
 using OAuthServer.Models;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -13,6 +17,7 @@ public class AuthController : ControllerBase
     private readonly UserManager<IdentityUser> _userManager;
     private readonly SignInManager<IdentityUser> _signInManager;
     private readonly IConfiguration _configuration;
+
 
     public AuthController(UserManager<IdentityUser> userManager, SignInManager<IdentityUser> signInManager, IConfiguration configuration)
     {
@@ -44,10 +49,29 @@ public class AuthController : ControllerBase
         {
             var user = await _userManager.FindByNameAsync(model.Username);
             var token = GenerateJwtToken(user);
-            return Ok(new { Token = token });
+            return Ok(new { Token = token});
         }
 
         return Unauthorized();
+    }
+
+    [HttpGet("validate-token")]
+    public IActionResult ValidateToken([FromQuery] string token)
+    {
+        if (string.IsNullOrEmpty(token))
+        {
+            return BadRequest("Token is required.");
+        }
+        TokenService _tokenService = new();
+
+var isValid = _tokenService.ValidateToken(token);
+
+        if (!isValid)
+        {
+            return Unauthorized("Invalid token.");
+        }
+
+        return Ok(new { info = true });
     }
 
     private string GenerateJwtToken(IdentityUser user)
