@@ -49,7 +49,7 @@ public class AuthController : ControllerBase
         {
             var user = await _userManager.FindByNameAsync(model.Username);
             var token = GenerateJwtToken(user);
-            return Ok(new { Token = token});
+            return   Ok(new { Token = token});
         }
 
         return Unauthorized();
@@ -80,6 +80,7 @@ var isValid = _tokenService.ValidateToken(token);
         {
             new Claim(JwtRegisteredClaimNames.Sub, user.UserName),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+            
         };
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
